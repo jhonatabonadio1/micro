@@ -4,6 +4,7 @@
 import 'express-async-errors'
 import express, { Request, Response, NextFunction } from 'express'
 import cors from 'cors'
+import 'dotenv/config'
 
 import { routes } from './routes/routes'
 import bodyParser from 'body-parser'

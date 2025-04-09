@@ -1,5 +1,6 @@
 // rabbitPublisher.ts
 import amqp from 'amqplib'
+import 'dotenv/config'
 
 const RABBIT_HOST = process.env.RABBIT_HOST || 'localhost'
 const RABBIT_USER = process.env.RABBIT_USER || 'admin'

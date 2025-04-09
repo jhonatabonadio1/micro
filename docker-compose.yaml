@@ -3,9 +3,8 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
-    environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: admin
+    env_file:
+      - .env
     ports:
       - "15672:15672" 
     networks:
@@ -15,13 +14,6 @@ services:
     container_name: gateway
     depends_on:
       - rabbitmq
-    environment:
-      - IDENTITY_URL=http://identity:6001
-      - RABBIT_HOST=rabbitmq
-      - RABBIT_USER=admin
-      - ALLOWED_ORIGINS=http://localhost:3000
-      - ENV=DEV
-      - RABBIT_PASS=admin
     ports:
       - "6000:6000"
     networks:
@@ -32,30 +24,13 @@ services:
     container_name: identity
     depends_on:
       - rabbitmq
-    environment:
-      - DATABASE_URL=mongodb+srv://micro:RHyUvLRXaVIxXe0r@mongodb-identity.rlfgpae.mongodb.net/identitydb
-      - RABBIT_HOST=rabbitmq
-      - RABBIT_USER=admin
-      - RABBIT_PASS=admin
-      - ENV=DEV
-      - ALLOWED_ORIGINS=http://gateway:6000
-      - JWT_SECRET=695001d06d407bae6197bd1a8c4a4495483343c5f8fc45e625cb1389d6acd9c9c2b5f796
-      - JWT_REFRESH_SECRET=474ca9c394afc61627d94da21a7713716cff34c6fb21c365456090e0ab04df72
     networks:
       - internal_net
   notification:
     build: ./app/notification
     container_name: notification
     depends_on:
-      - identity
-    environment:
-      - DATABASE_URL=mongodb+srv://micro:dAVKWCLozatoZozD@notifications.s28ivh6.mongodb.net/notificationdb
-      - RABBIT_HOST=rabbitmq
-      - RABBIT_USER=admin
-      - RABBIT_PASS=admin
-      - ENV=DEV
-      - ALLOWED_ORIGINS=http://gateway:6000
-      - RESEND_API_KEY=re_Xk9hdNSR_7d1tNMaSa8haGgFbFPewzZ1A
+      - rabbitmq
     networks:
       - internal_net
 

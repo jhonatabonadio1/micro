@@ -11,6 +11,8 @@ import bodyParser from 'body-parser'
 import { consumeNotifications } from './config/rabbitConsumer'
 import { prismaClient } from './database/prismaClient'
 
+import 'dotenv/config'
+
 const PORT = process.env.PORT || 6002
 
 const app = express()
@@ -47,7 +49,7 @@ async function connectChannel() {
         const messageContent = msg.content.toString()
         console.log(`[x] Mensagem recebida: ${messageContent}`)
 
-        const { event, user } = JSON.parse(messageContent).user.email
+        const { event, user } = JSON.parse(messageContent)
 
         switch (event) {
           case 'UserCreated':
@@ -61,36 +63,42 @@ async function connectChannel() {
   }
 }
 
-connectChannel()
-
 async function sendMail(email: string, userId: string) {
   const resend = new Resend(process.env.RESEND_API_KEY)
   const personalizedTemplate = recoveryPasswordTemplate('#')
 
   const SUBJECT = 'Conta criada com sucesso - Micro'
 
-  const createNotificaiton = await prismaClient.notification.create({
-    data: {
-      email,
-      message: SUBJECT,
-      userId,
-    },
-  })
-
-  if (createNotificaiton) {
-    await resend.emails.send({
-      from: 'Incorporaê <recovery@incorporae.com.br>',
-      to: email,
-      subject: SUBJECT,
-      html: personalizedTemplate,
+  try {
+    const createNotificaiton = await prismaClient.notification.create({
+      data: {
+        email,
+        message: SUBJECT,
+        userId,
+      },
     })
 
-    return console.log({
-      message: 'E-mail de recuperação enviado com sucesso.',
-      email,
-    })
+    if (createNotificaiton) {
+      await resend.emails.send({
+        from: 'Incorporaê <recovery@incorporae.com.br>',
+        to: email,
+        subject: SUBJECT,
+        html: personalizedTemplate,
+      })
+
+      return console.log({
+        message: 'E-mail de recuperação enviado com sucesso.',
+        email,
+      })
+    }
+
+    console.log('NOTIFICAÇÃO CRIADA', { email, userId })
+  } catch (error) {
+    console.log('ERRO', error)
   }
 }
+
+connectChannel()
 
 app.use(async (err: Error, req: Request, res: Response, next: NextFunction) => {
   if (res.headersSent) {
